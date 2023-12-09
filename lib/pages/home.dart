@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_boiler_plate/pages/dashboard.dart';
 import 'package:flutter_boiler_plate/utils/app_styles.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,11 +21,11 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               flex: 1,
-              child: _buildRightSection(),
+              child: _buildRightSection(context),
             ),
             Expanded(
               flex: 1,
-              child: _buildLeftSection(),
+              child: _buildLeftSection(context),
             ),
           ],
         ),
@@ -32,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildLeftSection() {
+  Widget _buildLeftSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -54,12 +55,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRightSection() {
+  Widget _buildRightSection(BuildContext context) {
     final double buttonWidth = 30.0; // Set your desired button width
     final double buttonHeight = 30.0; // Set your desired button height
 
     final double textFieldWidth = 40.0; // Set your desired text field width
     final double textFieldHeight = 40.0; // Set your desired text field height
+
+    void navigateToDashboard(BuildContext context) async {
+      bool isLoggedIn = true; // Call your sign-in method
+
+      if (isLoggedIn) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Dashboard()),
+        );
+      }
+    }
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -98,7 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Username',
-                  labelStyle: const TextStyle(color: AppTheme.textColor,fontSize: 12),
+                  labelStyle:
+                      const TextStyle(color: AppTheme.textColor, fontSize: 12),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                     borderSide: const BorderSide(
@@ -116,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fillColor: AppTheme.textFieldBgColor,
                   filled: true,
                 ),
-                style: const TextStyle(color: AppTheme.textColor,fontSize: 13),
+                style: const TextStyle(color: AppTheme.textColor, fontSize: 13),
               ),
             )),
         const SizedBox(height: 20),
@@ -128,7 +141,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  labelStyle: const TextStyle(color: AppTheme.textColor,fontSize: 12),
+                  labelStyle:
+                      const TextStyle(color: AppTheme.textColor, fontSize: 12),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                     borderSide: const BorderSide(
@@ -146,8 +160,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   fillColor: AppTheme.textFieldBgColor,
                   filled: true,
                 ),
-               style: const TextStyle(color: AppTheme.textColor,fontSize: 13),
-               ),
+                style: const TextStyle(color: AppTheme.textColor, fontSize: 13),
+              ),
             )),
         const SizedBox(height: 10),
         Padding(
@@ -193,7 +207,9 @@ class _HomeScreenState extends State<HomeScreen> {
               width: buttonWidth,
               height: buttonHeight,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  navigateToDashboard(context);
+                },
                 child: const Text(
                   'Sign In',
                   style: TextStyle(fontSize: 12),
