@@ -55,148 +55,166 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRightSection() {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-               'Time 🚀 jet 🔥',
-              style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textColor,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Track employee time and activities efficiently!',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppTheme.textColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 20),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: TextFormField(
-          decoration: InputDecoration(
-            labelText: 'Username',
-            labelStyle: const TextStyle(color: AppTheme.textColor),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(
-                color: AppTheme.primaryBorderColor,
-                width: 1.0,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(
-                color: AppTheme.primaryBorderColor,
-                width: 1.0,
-              ),
-            ),
-            fillColor: AppTheme.buttonColor,
-            filled: true,
-          ),
-          style: const TextStyle(color: AppTheme.textColor),
-        ),
-      ),
-      const SizedBox(height: 20),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: TextFormField(
-          decoration: InputDecoration(
-            labelText: 'Password',
-            labelStyle: const TextStyle(color: AppTheme.textColor),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(
-                color: AppTheme.primaryBorderColor,
-                width: 1.0,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(
-                color: AppTheme.primaryBorderColor,
-                width: 1.0,
-              ),
-            ),
-            fillColor: AppTheme.buttonColor,
-            filled: true,
-          ),
-          style: const TextStyle(color: AppTheme.textColor),
-        ),
-      ),
-      const SizedBox(height: 10),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Row(
-          children: [
-            Checkbox(
-              value: false, // Use state management to handle the value
-              onChanged: (bool? value) {
-                // Handle checkbox change
-              },
-            ),
-            Text(
-              'Remember Me',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppTheme.textColor,
-              ),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () {
-                // Action for "Forgot Password?" link
-              },
-              child: Text(
-                'Forgot Password?',
+    final double buttonWidth = 30.0; // Set your desired button width
+    final double buttonHeight = 30.0; // Set your desired button height
+
+    final double textFieldWidth = 40.0; // Set your desired text field width
+    final double textFieldHeight = 40.0; // Set your desired text field height
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Time 🚀 jet 🔥',
                 style: TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.primaryBorderColor,
+                  fontSize: 34,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textColor,
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 20),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-        child: ElevatedButton(
-          onPressed: () {},
-          child: const Text(
-            'Sign In',
-            style: TextStyle(fontSize: 16),
-          ),
-          style: ElevatedButton.styleFrom(
-            primary: AppTheme.buttonColor,
-            onPrimary: AppTheme.buttonTextColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              side: const BorderSide(
-                color: AppTheme.primaryBorderColor,
-                width: 1.0,
+              const SizedBox(height: 10),
+              Text(
+                'Track employee time and activities efficiently!',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.textColor,
+                ),
               ),
-            ),
-            elevation: 4,
-            minimumSize: Size(double.infinity, 40), // Adjust button height
+            ],
           ),
         ),
-      ),
-    ],
-  );
-}
-
+        const SizedBox(height: 100),
+        Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 70.0),
+            child: SizedBox(
+              width: textFieldWidth,
+              height: textFieldHeight,
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  labelStyle: const TextStyle(color: AppTheme.textColor,fontSize: 12),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primaryBorderColor,
+                      width: 1.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primaryBorderColor,
+                      width: 1.0,
+                    ),
+                  ),
+                  fillColor: AppTheme.textFieldBgColor,
+                  filled: true,
+                ),
+                style: const TextStyle(color: AppTheme.textColor,fontSize: 13),
+              ),
+            )),
+        const SizedBox(height: 20),
+        Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 70.0),
+            child: SizedBox(
+              width: textFieldWidth,
+              height: textFieldHeight,
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: const TextStyle(color: AppTheme.textColor,fontSize: 12),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primaryBorderColor,
+                      width: 1.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primaryBorderColor,
+                      width: 1.0,
+                    ),
+                  ),
+                  fillColor: AppTheme.textFieldBgColor,
+                  filled: true,
+                ),
+               style: const TextStyle(color: AppTheme.textColor,fontSize: 13),
+               ),
+            )),
+        const SizedBox(height: 10),
+        Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 80.0),
+            child: SizedBox(
+              width: textFieldWidth,
+              height: textFieldHeight,
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: false, // Use state management to handle the value
+                    onChanged: (bool? value) {
+                      // Handle checkbox change
+                    },
+                  ),
+                  Text(
+                    'Remember Me',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textColor,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      // Action for "Forgot Password?" link
+                    },
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.primaryBorderColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+        const SizedBox(height: 20),
+        Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 200.0),
+            child: SizedBox(
+              width: buttonWidth,
+              height: buttonHeight,
+              child: ElevatedButton(
+                onPressed: () {},
+                child: const Text(
+                  'Sign In',
+                  style: TextStyle(fontSize: 12),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: AppTheme.buttonColor,
+                  onPrimary: AppTheme.buttonTextColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    side: const BorderSide(
+                      color: AppTheme.primaryBorderColor,
+                      width: 1.0,
+                    ),
+                  ),
+                  elevation: 4,
+                  minimumSize:
+                      Size(double.infinity, 40), // Adjust button height
+                ),
+              ),
+            )),
+      ],
+    );
+  }
 }
