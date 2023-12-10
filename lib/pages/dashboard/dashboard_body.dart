@@ -7,13 +7,18 @@ import 'package:provider/provider.dart';
 class Project {
   final String id;
   final String title;
+  bool isWorking; // New property to track project status
 
-  Project({required this.id, required this.title});
+  Project({
+    required this.id,
+    required this.title,
+    this.isWorking = false, // Default value for isWorking
+  });
 
   factory Project.fromJson(Map<String, dynamic> json) {
     return Project(
       id: json['_id'],
-      title: json['projectName'], // Updated to match the JSON key
+      title: json['projectName'],
     );
   }
 }
@@ -30,6 +35,7 @@ class _DashboardBodyState extends State<DashboardBody> {
   List<Map<String, dynamic>> projects = [];
   bool _isFetchProjectsCalled =
       false; // Flag to track if _fetchProjects is called
+  String? _currentProjectTitle; // Track the current project title
 
   @override
   void didChangeDependencies() {
@@ -37,20 +43,9 @@ class _DashboardBodyState extends State<DashboardBody> {
     storageManager = Provider.of<StorageManager>(context);
     if (!_isFetchProjectsCalled) {
       _fetchProjects();
-      _isFetchProjectsCalled =
-          true; // Set the flag to true after calling _fetchProjects
-    } // Call method to fetch projects when dependencies change
+      _isFetchProjectsCalled = true;
+    }
   }
-
-  // @override
-  // void initState() {
-  //   super.initState();
-
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     storageManager = Provider.of<StorageManager>(context);
-  //     _fetchProjects();
-  //   });
-  // }
 
   Future<void> _fetchProjects() async {
     try {
@@ -60,26 +55,12 @@ class _DashboardBodyState extends State<DashboardBody> {
         projects = fetchedProjects;
       });
 
-      // Convert fetched projects to List<Project>
       List<Project> projectObjects = fetchedProjects
           .map((projectMap) => Project.fromJson(projectMap))
           .toList();
 
-      // Update the list of projects in StorageManager
       storageManager.updateListOfProjects(projectObjects);
-      print("projectObjects");
-      print(projectObjects);
-      for (Project project in projectObjects) {
-        print('Project ID: ${project.id}, Project Title: ${project.title}');
-      }
       if (projectObjects.isNotEmpty) {
-        print("setting up as under work project ");
-        print(projectObjects.first);
-        print(
-            'Setting up the first project as the current project under work:');
-        print(
-            'Project ID: ${projectObjects.first.id}, Project Title: ${projectObjects.first.title}');
-
         storageManager.setCurrentProjectUnderWork(projectObjects.first);
       }
     } catch (error) {
@@ -94,8 +75,7 @@ class _DashboardBodyState extends State<DashboardBody> {
         endpoint: 'projects/parent/$userParentId',
         method: 'GET',
       );
-      // print(response);
-      ;
+
       if (response['success']) {
         final dynamic responseData = response['data'];
 
@@ -134,7 +114,6 @@ class _DashboardBodyState extends State<DashboardBody> {
             itemCount: projects.length,
             itemBuilder: (context, index) {
               final project = projects[index];
-
               return _buildProjectCard(
                 project['projectName'] ??
                     '', // Replace with your project data keys
@@ -147,13 +126,32 @@ class _DashboardBodyState extends State<DashboardBody> {
     );
   }
 
+  void _setCurrentProject(String projectName) {
+    final storageManager = Provider.of<StorageManager>(context, listen: false);
+    final selectedProject = storageManager.listOfProjects.firstWhere(
+      (project) => project.title == projectName,
+      orElse: () => Project(id: '', title: ''),
+    );
+
+    storageManager.setCurrentProjectUnderWork(selectedProject);
+  }
+
   Widget _buildProjectCard(String projectName, String time) {
+    final storageManager = Provider.of<StorageManager>(context, listen: false);
+    final currentProject = storageManager.getCurrentProjectUnderWork();
+    final project = storageManager.listOfProjects.firstWhere(
+      (project) => project.title == projectName,
+      orElse: () => Project(id: '', title: ''),
+    );
+
+    // final isWorkingOnProject =
+    // currentProject != null && currentProject.title == projectName;
+
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.0),
       ),
-      color:
-          AppTheme.background_color_overlay, // Replace with your desired color
+      color: AppTheme.background_color_overlay,
       child: ListTile(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -179,18 +177,52 @@ class _DashboardBodyState extends State<DashboardBody> {
                 const SizedBox(width: 10),
                 IconButton(
                   onPressed: () {
-                    // Handle play/pause functionality for the project
+                    setState(() {
+                      if (_currentProjectTitle == projectName) {
+                        // If the same project is tapped again, pause it
+                        final currentProj =
+                            storageManager.listOfProjects.firstWhere(
+                          (project) => project.title == _currentProjectTitle,
+                          orElse: () => Project(id: '', title: ''),
+                        );
+                        currentProj.isWorking = false;
+                        _currentProjectTitle=null;
+                      } else {
+                        // Pause the previously selected project, if any
+                        if (_currentProjectTitle != null) {
+                          final prevProject =
+                              storageManager.listOfProjects.firstWhere(
+                            (project) => project.title == _currentProjectTitle,
+                            orElse: () => Project(id: '', title: ''),
+                          );
+                          prevProject.isWorking = false;
+                        }
+
+                        // Start working on the selected project
+                        _currentProjectTitle = projectName;
+                        final selectedProject =
+                            storageManager.listOfProjects.firstWhere(
+                          (project) => project.title == projectName,
+                          orElse: () => Project(id: '', title: ''),
+                        );
+                        selectedProject.isWorking = true;
+                        storageManager
+                            .setCurrentProjectUnderWork(selectedProject);
+                      }
+                    });
                   },
-                  icon: const Icon(Icons.play_arrow),
-                  color: Colors.white,
-                  iconSize: 20,
+                  icon: Icon(
+                    project.isWorking ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ],
             ),
           ],
         ),
         onTap: () {
-          // Handle tap for the project
+          // _setCurrentProject(projectName);
         },
       ),
     );

@@ -24,17 +24,10 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initSocketConnection();
-      _listenToCurrentProjectChanges();
+      _listenToProjectsChanges();
     });
   }
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   // storageManager = Provider.of<StorageManager>(context);
-  //   // Call method to fetch projects when dependencies change
-  //   _getCurrentProjectUnderWork();
-  // }
 
   void _initSocketConnection() {
     socket = Provider.of<SocketManager>(context, listen: false);
@@ -43,9 +36,8 @@ class _DashboardState extends State<Dashboard> {
 
  
 
-  void _listenToCurrentProjectChanges() {
+  void _listenToProjectsChanges() {
     storageManager = Provider.of<StorageManager>(context, listen: false);
-
     // Listen to changes in the current project under work
     storageManager.addListener(() {
       Project? currentProject = storageManager.getCurrentProjectUnderWork();
