@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_boiler_plate/apis/api_manager.dart';
 import 'package:flutter_boiler_plate/pages/dashboard.dart';
 import 'package:flutter_boiler_plate/utils/app_styles.dart';
+import 'package:flutter_boiler_plate/utils/constants.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -10,6 +12,67 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late TextEditingController _usernameController;
+  late TextEditingController _passwordController;
+  String _enteredUsername = ''; // Variable to hold entered username
+  String _enteredPassword = ''; // Variable to hold entered password
+  String _loginError = ''; // Variable to hold login error message
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<bool> loginUser() async {
+    try {
+      print('_usernameController.text ' + _usernameController.text);
+
+      print('_passwordController.text ' + _passwordController.text);
+
+      final response = await ApiManager.callApi(
+        endpoint: 'login/user', // Use your endpoint from constants
+        method: 'POST',
+        body: {
+          'userName': _usernameController.text,
+          'password': _passwordController.text,
+        },
+        headers: {'Content-Type': 'application/json'},
+      );
+      print('login response: $response');
+      if (response['success']) {
+        final Map<String, dynamic> data = response['data'];
+        print('Login successful. User: ${data}');
+        return true;
+        // Handle storing user data and navigation here
+        // ...
+      } else {
+        // Error handling for unsuccessful login
+        final errorMessage = response['message'];
+        setState(() {
+          _loginError = errorMessage; // Set error message
+        });
+        return false;
+        // showNotification(context, 'Invalid username or password');
+      }
+    } catch (error) {
+      // Handle network or other errors
+      // showNotification(context, 'Network or server error');
+      setState(() {
+        _loginError = 'Network or server error'; // Set error message
+      });
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,12 +126,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final double textFieldHeight = 40.0; // Set your desired text field height
 
     void navigateToDashboard(BuildContext context) async {
-      bool isLoggedIn = true; // Call your sign-in method
+      bool isLoggedIn = await loginUser(); // Call your sign-in method
 
       if (isLoggedIn) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => Dashboard()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_loginError),
+            duration: Duration(seconds: 2),
+          ),
         );
       }
     }
@@ -108,6 +178,12 @@ class _HomeScreenState extends State<HomeScreen> {
               width: textFieldWidth,
               height: textFieldHeight,
               child: TextFormField(
+                controller: _usernameController,
+                onChanged: (value) {
+                  setState(() {
+                    _enteredUsername = value; // Store entered username
+                  });
+                },
                 decoration: InputDecoration(
                   labelText: 'Username',
                   labelStyle:
@@ -139,6 +215,12 @@ class _HomeScreenState extends State<HomeScreen> {
               width: textFieldWidth,
               height: textFieldHeight,
               child: TextFormField(
+                controller: _passwordController,
+                onChanged: (value) {
+                  setState(() {
+                    _enteredPassword = value; // Store entered password
+                  });
+                },
                 decoration: InputDecoration(
                   labelText: 'Password',
                   labelStyle:
