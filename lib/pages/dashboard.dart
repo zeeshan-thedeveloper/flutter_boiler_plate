@@ -24,15 +24,25 @@ class _DashboardState extends State<Dashboard> {
   late bool _isTimerRunning; // Track if the timer is running
   late Timer _timer; // Timer instance
   late Duration _duration; // Duration for the timer
+  late Timer _projectTimer;
+  int totalTimeSpent = 0;
+  late TextEditingController _nameController;
 
   @override
   void initState() {
     super.initState();
     _isTimerRunning = false; // Initialize the timer state
     _duration = Duration(seconds: 0); // Initialize the duration to zero
-    _timer = Timer.periodic(
-        Duration(seconds: 1), _updateTimer); // Initialize the timer
-    _currentProjectStatus=false;
+    _timer = Timer.periodic(Duration(seconds: 1), _updateTimer);
+    _projectTimer = Timer.periodic(Duration(seconds: 1), _updateTimer);
+    // Initialize the timer
+    storageManager = Provider.of<StorageManager>(context, listen: false);
+
+    var username = storageManager.getUserData['userName'];
+    print(username);
+    _nameController = TextEditingController(text: username);
+
+    _currentProjectStatus = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initSocketConnection();
       _listenToProjectsChanges();
@@ -67,16 +77,52 @@ class _DashboardState extends State<Dashboard> {
 
   void _listenToProjectsChanges() {
     storageManager = Provider.of<StorageManager>(context, listen: false);
-    // Listen to changes in the current project under work
+    Project? previousProject;
+
+    void updateProjectTime(Project? project) {
+      if (project != null && project != previousProject) {
+        previousProject = project;
+        int projectTime = storageManager.getProjectTime(project.id);
+        _projectTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+          if (_isTimerRunning) {
+            projectTime++;
+            storageManager.updateProjectTime(project.id, projectTime);
+          }
+        });
+      }
+    }
+
+    void _cancelProjectTimer() {
+      _projectTimer.cancel();
+    }
+
     storageManager.addListener(() {
       Project? currentProject = storageManager.getCurrentProjectUnderWork();
+
       if (currentProject != null) {
+        if (_currentProjectTitle != null) {
+          if (_currentProjectTitle != currentProject.title) {
+            _cancelProjectTimer();
+          }
+        }
+        Map<String, int> allProjects = storageManager.getAllProjectsTime();
+
+        totalTimeSpent = 0;
+        allProjects.forEach((projectId, timeSpent) {
+          totalTimeSpent += timeSpent;
+        });
         setState(() {
+          print(totalTimeSpent);
+          _duration = Duration(seconds: totalTimeSpent);
           _currentProjectTitle = currentProject.title;
           _currentProjectStatus = currentProject.isWorking;
+          _isTimerRunning = currentProject.isWorking;
         });
-        _toggleTimerAndProject();
       }
+
+      _toggleTimerAndProject();
+
+      updateProjectTime(currentProject);
     });
   }
 
@@ -137,54 +183,45 @@ class _DashboardState extends State<Dashboard> {
                 child: ListView(
                   children: [
                     Container(
-                      height: 90, // Set the desired height here
+                      height: 90,
                       child: DrawerHeader(
                         decoration: BoxDecoration(
                           color: AppTheme.background_color,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: AssetImage(
+                                  'lib/utils/images/girl_sitting.png'),
+                              radius: 20,
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  CircleAvatar(
-                                    backgroundImage: AssetImage(
-                                        'lib/utils/images/girl_sitting.png'), // Replace with your image path
-                                    radius: 20, // Set your desired radius
-                                  ), // Replace with your icon
-                                  SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Zeeshan Ahmed', // Replace with user's name
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Co-founder', // Replace with user's role or subtitle
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
+                                  Text(
+                                    _nameController.text, // Replace with user's name
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Employee', // Replace with user's role or subtitle
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                    ),
                                   ),
                                 ],
                               ),
-                              // Add more widgets below the row as needed
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    // Divider(color: Colors.white.withOpacity(0.3)),
+                    ), // Divider(color: Colors.white.withOpacity(0.3)),
                     // Listview
                     ListTile(
                       leading: Icon(Icons.dashboard),
@@ -294,12 +331,13 @@ class _DashboardState extends State<Dashboard> {
                                   children: [
                                     Text(
                                       '${_durationToString()}', // Another text below Work Hrs Today
-                                      style: TextStyle(color: Colors.white),
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 28),
                                     ),
-                                    Text(
-                                      'Work Hrs Today: 8', // Display work hours today here
-                                      style: TextStyle(color: Colors.white),
-                                    ),
+                                    // Text(
+                                    //   'Work Hrs Today: 8', // Display work hours today here
+                                    //   style: TextStyle(color: Colors.white),
+                                    // ),
                                   ],
                                 ),
                               ],

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_boiler_plate/apis/api_manager.dart';
 import 'package:flutter_boiler_plate/managers/storage_manager.dart';
@@ -43,8 +45,10 @@ class _DashboardBodyState extends State<DashboardBody> {
     storageManager = Provider.of<StorageManager>(context);
     if (!_isFetchProjectsCalled) {
       _fetchProjects();
+      getProjectsTimeSpentAlready();
       _isFetchProjectsCalled = true;
     }
+    // projects = storageManager.getProjectsAsMapList();
   }
 
   Future<void> _fetchProjects() async {
@@ -98,30 +102,85 @@ class _DashboardBodyState extends State<DashboardBody> {
     }
   }
 
+  void getProjectsTimeSpentAlready() async {
+    try {
+      final response = await ApiManager.callApi(
+        endpoint: 'user/myProgress', // Use your endpoint from constants
+        method: 'POST',
+        body: {
+          'userId': storageManager.getUserData['_id'],
+          'date': DateTime.now().toString()
+        },
+        headers: {'Content-Type': 'application/json'},
+      );
+      print('lgetProjectsTimeSpentAlready $response');
+      if (response['success']) {
+        final Map<String, dynamic> data = response['data'];
+        // Check if the 'record' field is defined
+        if (data.containsKey('record')) {
+          final Map<String, dynamic> record = data['record'];
+
+          // Check if the 'projects' array is defined and not empty
+          if (record.containsKey('projects') && record['projects'] is List) {
+            final List<dynamic> projects = record['projects'];
+
+            // Iterate through each project in the 'projects' array
+            for (final project in projects) {
+              if (project is Map<String, dynamic>) {
+                final String projectId = project['projectId'];
+                final int timeSpent = project['timeSpent'];
+
+                // Update the project timer using the obtained projectId and timeSpent
+                storageManager.updateProjectTime(projectId, timeSpent);
+              }
+            }
+          }
+        }
+      } else {
+        // Error handling for unsuccessful login
+        // final errorMessage = response['message'];
+        // setState(() {
+        //   _loginError = errorMessage; // Set error message
+        // });
+        // return false;
+        // showNotification(context, 'Invalid username or password');
+      }
+    } catch (error) {
+      print(error);
+      // Handle network or other errors
+      // showNotification(context, 'Network or server error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 0),
-          decoration: BoxDecoration(
-            color: AppTheme.background_color,
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(10),
-            itemCount: projects.length,
-            itemBuilder: (context, index) {
-              final project = projects[index];
-              return _buildProjectCard(
-                project['projectName'] ??
-                    '', // Replace with your project data keys
-                project['time'] ?? '', // Replace with your project data keys
-              );
-            },
-          ),
-        ),
+            margin: const EdgeInsets.symmetric(horizontal: 0),
+            decoration: BoxDecoration(
+              color: AppTheme.background_color,
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: Consumer<StorageManager>(
+              builder: (context, storageManager, _) {
+                final projects = storageManager.getProjectsAsMapList();
+                return ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: projects.length,
+                  itemBuilder: (context, index) {
+                    final project = projects[index];
+                    return _buildProjectCard(
+                      project['title'] ??
+                          '', // Replace with your project data keys
+                      project['time_spent'] ??
+                          '00:00:00', // Replace with your project data keys
+                    );
+                  },
+                );
+              },
+            )),
       ),
     );
   }
@@ -186,7 +245,7 @@ class _DashboardBodyState extends State<DashboardBody> {
                           orElse: () => Project(id: '', title: ''),
                         );
                         currentProj.isWorking = false;
-                        _currentProjectTitle=null;
+                        _currentProjectTitle = null;
                       } else {
                         // Pause the previously selected project, if any
                         if (_currentProjectTitle != null) {

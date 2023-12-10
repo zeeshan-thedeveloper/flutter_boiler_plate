@@ -14,6 +14,7 @@ class StorageManager extends ChangeNotifier {
 
   dynamic get getUserData => storedUserData;
   void updateProjectTime(String projectName, int seconds) {
+    print('updating $projectName with $seconds');
     if (storedUserData == null) {
       return;
     } else {
@@ -22,9 +23,43 @@ class StorageManager extends ChangeNotifier {
     }
   }
 
+  String formatTime(int timeInSeconds) {
+    int hours = timeInSeconds ~/ 3600;
+    int minutes = (timeInSeconds % 3600) ~/ 60;
+    int seconds = timeInSeconds % 60;
+
+    String formattedTime =
+        '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
+    return formattedTime;
+  }
+
+  List<Map<String, dynamic>> getProjectsAsMapList() {
+    List<Map<String, dynamic>> projectsMapList = [];
+
+    for (Project project in listOfProjects) {
+      int timeSpentInSeconds = projectTimes[project.id] ??
+          0; // Fetch time spent from projectTimes using project id
+
+      Map<String, dynamic> projectMap = {
+        'id': project.id,
+        'title': project.title,
+        'isWorking': project.isWorking,
+        'time_spent': formatTime(
+            timeSpentInSeconds), // time_spent field from projectTimes
+        // Add other properties as needed
+      };
+      projectsMapList.add(projectMap);
+    }
+
+    return projectsMapList;
+  }
+
   int getProjectTime(String projectName) {
     return projectTimes[projectName] ?? 0;
   }
+
+  List<Project> get getListOfProjects => listOfProjects;
 
   Map<String, int> getAllProjectsTime() {
     return projectTimes;
