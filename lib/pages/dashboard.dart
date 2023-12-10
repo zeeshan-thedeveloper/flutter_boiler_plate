@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_boiler_plate/managers/socket_manager.dart';
+import 'package:flutter_boiler_plate/managers/storage_manager.dart';
 import 'package:flutter_boiler_plate/pages/dashboard/dashboard_body.dart';
 import 'package:flutter_boiler_plate/pages/dashboard/settings.dart';
 import 'package:flutter_boiler_plate/pages/home.dart';
 import 'package:flutter_boiler_plate/utils/app_styles.dart';
+import 'package:provider/provider.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({Key? key}) : super(key: key);
@@ -12,6 +15,47 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   String _selectedItem = 'Dashboard'; // Initialize the selected item
+  late SocketManager socket;
+  late StorageManager storageManager;
+  String _currentProjectTitle = ''; // Initialize the current project title
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initSocketConnection();
+      _listenToCurrentProjectChanges();
+    });
+  }
+
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   // storageManager = Provider.of<StorageManager>(context);
+  //   // Call method to fetch projects when dependencies change
+  //   _getCurrentProjectUnderWork();
+  // }
+
+  void _initSocketConnection() {
+    socket = Provider.of<SocketManager>(context, listen: false);
+    socket.connect(); // Call connect method here
+  }
+
+ 
+
+  void _listenToCurrentProjectChanges() {
+    storageManager = Provider.of<StorageManager>(context, listen: false);
+
+    // Listen to changes in the current project under work
+    storageManager.addListener(() {
+      Project? currentProject = storageManager.getCurrentProjectUnderWork();
+      if (currentProject != null) {
+        setState(() {
+          _currentProjectTitle = currentProject.title;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +63,7 @@ class _DashboardState extends State<Dashboard> {
 
     Widget _getSelectedScreen() {
       // Return the screen widget based on the selected item
-      print(_selectedItem);
+      // print(_selectedItem);
       switch (_selectedItem) {
         case 'Dashboard':
           return DashboardBody(); // Show Dashboard content
@@ -129,10 +173,15 @@ class _DashboardState extends State<Dashboard> {
                         ),
                       ),
                       onTap: () {
+                        SocketManager socket =
+                            Provider.of<SocketManager>(context, listen: false);
+                        socket
+                            .disconnectSocket(); // Disconnect socket connection
+
                         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+                          context,
+                          MaterialPageRoute(builder: (context) => HomeScreen()),
+                        );
                       },
                     ),
                     // Add other ListTiles or widgets for drawer items
@@ -183,7 +232,7 @@ class _DashboardState extends State<Dashboard> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Working on : But_Me_First', // Another text below Work Hrs Today
+                                  'Working on : $_currentProjectTitle', // Another text below Work Hrs Today
                                   style: TextStyle(color: Colors.white),
                                 ),
                                 Column(

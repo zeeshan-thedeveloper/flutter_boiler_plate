@@ -9,16 +9,39 @@ class ApiManager {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
   }) async {
+    late http.Response response;
+    final uri = Uri.parse('${Constants.baseUrl}/$endpoint');
+
     try {
-      final response = await http.Client().post(
-        Uri.parse('${Constants.baseUrl}/$endpoint'), // Use the baseUrl constant
-        headers: headers,
-        body: body != null ? jsonEncode(body) : null,
-      );
+      if (method == 'GET') {
+        response = await http.get(uri, headers: headers);
+      } else if (method == 'POST') {
+        response = await http.post(uri,
+            headers: headers, body: body != null ? jsonEncode(body) : null);
+      } else if (method == 'PUT') {
+        response = await http.put(uri,
+            headers: headers, body: body != null ? jsonEncode(body) : null);
+      } else if (method == 'DELETE') {
+        response = await http.delete(uri, headers: headers);
+      } else {
+        // Handle other HTTP methods as needed
+        return {
+          'success': false,
+          'message': 'Unsupported HTTP method: $method',
+        };
+      }
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        return {'success': true, 'data': data};
+        final dynamic data = jsonDecode(response.body);
+
+        if (data is Map<String, dynamic> || data is List<dynamic>) {
+          return {'success': true, 'data': data};
+        } else {
+          return {
+            'success': false,
+            'message': 'Error: Unexpected data structure',
+          };
+        }
       } else {
         return {
           'success': false,

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_boiler_plate/apis/api_manager.dart';
+import 'package:flutter_boiler_plate/managers/storage_manager.dart';
 import 'package:flutter_boiler_plate/pages/dashboard.dart';
 import 'package:flutter_boiler_plate/utils/app_styles.dart';
 import 'package:flutter_boiler_plate/utils/constants.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -30,47 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Future<bool> loginUser() async {
-    try {
-      print('_usernameController.text ' + _usernameController.text);
-
-      print('_passwordController.text ' + _passwordController.text);
-
-      final response = await ApiManager.callApi(
-        endpoint: 'login/user', // Use your endpoint from constants
-        method: 'POST',
-        body: {
-          'userName': _usernameController.text,
-          'password': _passwordController.text,
-        },
-        headers: {'Content-Type': 'application/json'},
-      );
-      print('login response: $response');
-      if (response['success']) {
-        final Map<String, dynamic> data = response['data'];
-        print('Login successful. User: ${data}');
-        return true;
-        // Handle storing user data and navigation here
-        // ...
-      } else {
-        // Error handling for unsuccessful login
-        final errorMessage = response['message'];
-        setState(() {
-          _loginError = errorMessage; // Set error message
-        });
-        return false;
-        // showNotification(context, 'Invalid username or password');
-      }
-    } catch (error) {
-      // Handle network or other errors
-      // showNotification(context, 'Network or server error');
-      setState(() {
-        _loginError = 'Network or server error'; // Set error message
-      });
-      return false;
-    }
   }
 
   @override
@@ -124,6 +85,46 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final double textFieldWidth = 40.0; // Set your desired text field width
     final double textFieldHeight = 40.0; // Set your desired text field height
+    final storageManager = Provider.of<StorageManager>(context);
+
+    Future<bool> loginUser() async {
+      try {
+        final response = await ApiManager.callApi(
+          endpoint: 'login/user', // Use your endpoint from constants
+          method: 'POST',
+          body: {
+            'userName': _usernameController.text,
+            'password': _passwordController.text,
+          },
+          headers: {'Content-Type': 'application/json'},
+        );
+        // print('login response: $response');
+        if (response['success']) {
+          final Map<String, dynamic> data = response['data'];
+          // print('Login successful. User: ${data}');
+          storageManager.storeData(data['user']);
+
+          return true;
+          // Handle storing user data and navigation here
+          // ...
+        } else {
+          // Error handling for unsuccessful login
+          final errorMessage = response['message'];
+          setState(() {
+            _loginError = errorMessage; // Set error message
+          });
+          return false;
+          // showNotification(context, 'Invalid username or password');
+        }
+      } catch (error) {
+        // Handle network or other errors
+        // showNotification(context, 'Network or server error');
+        setState(() {
+          _loginError = 'Network or server error'; // Set error message
+        });
+        return false;
+      }
+    }
 
     void navigateToDashboard(BuildContext context) async {
       bool isLoggedIn = await loginUser(); // Call your sign-in method
