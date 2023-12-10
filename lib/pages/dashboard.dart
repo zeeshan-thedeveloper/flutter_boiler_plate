@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_boiler_plate/managers/socket_manager.dart';
 import 'package:flutter_boiler_plate/managers/storage_manager.dart';
@@ -18,23 +20,50 @@ class _DashboardState extends State<Dashboard> {
   late SocketManager socket;
   late StorageManager storageManager;
   String _currentProjectTitle = ''; // Initialize the current project title
+  late bool _currentProjectStatus;
+  late bool _isTimerRunning; // Track if the timer is running
+  late Timer _timer; // Timer instance
+  late Duration _duration; // Duration for the timer
 
   @override
   void initState() {
     super.initState();
+    _isTimerRunning = false; // Initialize the timer state
+    _duration = Duration(seconds: 0); // Initialize the duration to zero
+    _timer = Timer.periodic(
+        Duration(seconds: 1), _updateTimer); // Initialize the timer
+    _currentProjectStatus=false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initSocketConnection();
       _listenToProjectsChanges();
     });
   }
 
+  void _updateTimer(Timer timer) {
+    if (_isTimerRunning) {
+      setState(() {
+        _duration = Duration(
+            seconds: _duration.inSeconds + 1); // Increment the duration
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
+  }
+
+  void _toggleTimer() {
+    setState(() {
+      _isTimerRunning = !_isTimerRunning; // Toggle the timer state
+    });
+  }
 
   void _initSocketConnection() {
     socket = Provider.of<SocketManager>(context, listen: false);
     socket.connect(); // Call connect method here
   }
-
- 
 
   void _listenToProjectsChanges() {
     storageManager = Provider.of<StorageManager>(context, listen: false);
@@ -44,9 +73,23 @@ class _DashboardState extends State<Dashboard> {
       if (currentProject != null) {
         setState(() {
           _currentProjectTitle = currentProject.title;
+          _currentProjectStatus = currentProject.isWorking;
         });
+        _toggleTimerAndProject();
       }
     });
+  }
+
+  void _toggleTimerAndProject() {
+    if (_currentProjectTitle.isNotEmpty) {
+      setState(() {
+        if (_isTimerRunning) {
+          _isTimerRunning = _currentProjectStatus; // Pause the timer
+        } else {
+          _isTimerRunning = _currentProjectStatus; // Start the timer
+        }
+      });
+    }
   }
 
   @override
@@ -65,6 +108,21 @@ class _DashboardState extends State<Dashboard> {
         default:
           return Container(); // Default empty container
       }
+    }
+
+    String _durationToString() {
+      String twoDigits(int n) {
+        if (n >= 10) return "$n";
+        return "0$n";
+      }
+
+      String twoDigitMinutes = twoDigits(_duration.inMinutes.remainder(60));
+      String twoDigitSeconds = twoDigits(_duration.inSeconds.remainder(60));
+      String twoDigitMilliseconds = twoDigits(
+          _duration.inMilliseconds.remainder(1000) ~/
+              10); // Calculating milliseconds
+
+      return "${twoDigits(_duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
     }
 
     return Scaffold(
@@ -211,13 +269,17 @@ class _DashboardState extends State<Dashboard> {
                                     color: Colors.white,
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () {
-                                    // Toggle play/pause functionality
-                                  },
-                                  icon: Icon(Icons.play_arrow),
-                                  color: Colors.white,
-                                ),
+                                // IconButton(
+                                //   onPressed: _toggleTimerAndProject,
+                                //   icon: Icon(
+                                //     _currentProjectTitle.isNotEmpty
+                                //         ? _isTimerRunning
+                                //             ? Icons.pause
+                                //             : Icons.play_arrow
+                                //         : Icons.play_arrow,
+                                //     color: Colors.white,
+                                //   ),
+                                // ),
                               ],
                             ),
                             Row(
@@ -231,7 +293,7 @@ class _DashboardState extends State<Dashboard> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      '01:32:22', // Another text below Work Hrs Today
+                                      '${_durationToString()}', // Another text below Work Hrs Today
                                       style: TextStyle(color: Colors.white),
                                     ),
                                     Text(
